@@ -10,8 +10,31 @@ router.get('/', (req, res) => {
 })
 
 router.post('/', (req, res) => {
-    insertRecord(req,res)
+    if(req.body._id == ''){
+        insertRecord(req,res)
+    } else {
+        updateRecord(req, res)
+    }
+    
 })
+
+function updateRecord(req, res) {
+    Employee.findOneAndUpdate({_id: req.body._id}, req.body, { new: true}, (err, doc) => {
+        if(!err) {
+            res.redirect('employee/list');
+        } else {
+            if(err.name == 'ValidationError') {
+                handleValidationError(err, req.body);
+                res.render("employee/addOrEdit", {
+                    viewTitle: 'Update Employee',
+                    employee: req.body
+                })
+            }else {
+                console.log("Error during record update : " + err)
+            }
+        }
+    })
+}
 
 function insertRecord(req, res) {
     var employee = new Employee;
@@ -62,5 +85,16 @@ function handleValidationError(err, body) {
         }
     }
 }
+
+router.get('/:id', (req, res) => {
+    Employee.findById(req.params.id, (err, doc) => {
+        if (!err) {
+            res.render('employee/addOrEdit', {
+                viewTitle: "Update Employee",
+                employee: doc
+            })
+        }
+    })
+})
 
 module.exports = router;
